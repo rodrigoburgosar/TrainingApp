@@ -1,0 +1,10 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(dotnet --version)",
+      "Skill(update-config)",
+      "Bash(find /c/Rodrigo/trainingapp/openspec/ -name *.md -o -name *.yaml)",
+      "Bash(winget install:*)"
+    ]
+  }
+}

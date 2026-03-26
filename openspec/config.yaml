@@ -1,0 +1,40 @@
+schema: spec-driven
+
+context: |
+  Tech stack: .NET 10, C#, ASP.NET Core Web API
+  Architecture: Clean Architecture (Domain, Application, Infrastructure, API layers)
+  ORM: Entity Framework Core 10
+  Database: PostgreSQL (Npgsql.EntityFrameworkCore.PostgreSQL)
+  Authentication: JWT Bearer tokens with ASP.NET Core Identity
+  Validation: FluentValidation
+  Mapping: Mapperly (compile-time source generation, MIT)
+  Testing: xUnit, Moq, Shouldly
+  Logging: Serilog
+  API Documentation: Swagger / OpenAPI (Swashbuckle)
+  Dependency Injection: built-in ASP.NET Core DI container
+  Domain: training app (workouts, exercises, training plans, users)
+
+  Conventions:
+  - Use async/await throughout all I/O operations
+  - Controllers are thin — delegate logic to Application layer services/handlers
+  - Use CQRS pattern with manual handlers (no MediatR) — ICommandHandler<TCommand> / IQueryHandler<TQuery, TResult>
+  - Repository pattern in Infrastructure layer
+  - Strongly-typed IDs where possible
+  - Use record types for DTOs and value objects
+  - Follow RESTful naming conventions for endpoints
+  - Use conventional commits (feat:, fix:, chore:, refactor:, test:)
+
+rules:
+  proposal:
+    - Always include affected layers (Domain / Application / Infrastructure / API)
+    - Include a "Non-goals" section
+    - Mention any breaking changes to existing API contracts
+  design:
+    - Define entities and their relationships before services
+    - Specify EF Core configurations (table names, keys, indexes)
+    - Include request/response DTO shapes
+  tasks:
+    - Break tasks by layer (Domain → Application → Infrastructure → API)
+    - Each task should touch at most one layer
+    - Include a task for unit/integration tests when adding business logic
+    - Keep tasks under 2 hours of estimated work
