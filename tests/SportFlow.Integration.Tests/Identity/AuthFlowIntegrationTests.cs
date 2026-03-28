@@ -4,9 +4,12 @@ using System.Text.Json;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc.Testing;
+using Microsoft.AspNetCore.TestHost;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
+using Microsoft.Extensions.Hosting;
 using SportFlow.Application.Identity.Commands;
 using SportFlow.Application.Identity.DTOs;
 using SportFlow.Domain.Identity;
@@ -105,26 +108,38 @@ public class AuthFlowIntegrationTests : IClassFixture<SportFlowWebAppFactory>
 
 public class SportFlowWebAppFactory : WebApplicationFactory<Program>
 {
+    // Dedicated EF Core internal service provider for InMemory — avoids dual-provider conflict
+    private static readonly IServiceProvider _efInternalSp = new ServiceCollection()
+        .AddEntityFrameworkInMemoryDatabase()
+        .BuildServiceProvider();
+
     protected override void ConfigureWebHost(IWebHostBuilder builder)
     {
-        builder.ConfigureServices(services =>
+        builder.ConfigureTestServices(services =>
         {
-            // Replace SQL Server with InMemory
-            services.RemoveAll<DbContextOptions<SportFlowDbContext>>();
-            services.RemoveAll<SportFlowDbContext>();
+            // Remove ALL registrations related to SportFlowDbContext options
+            // IDbContextOptionsConfiguration<T> holds the SqlServer lambda — must be removed first
+            services.RemoveAll(typeof(IDbContextOptionsConfiguration<SportFlowDbContext>));
+            services.RemoveAll(typeof(DbContextOptions<SportFlowDbContext>));
 
             services.AddDbContext<SportFlowDbContext>(options =>
-                options.UseInMemoryDatabase("SportFlowIntegrationTest_" + Guid.NewGuid()));
-
-            // Seed test data after DB is created
-            var sp = services.BuildServiceProvider();
-            using var scope = sp.CreateScope();
-            var db = scope.ServiceProvider.GetRequiredService<SportFlowDbContext>();
-            db.Database.EnsureCreated();
-            SeedTestData(db);
+                options.UseInMemoryDatabase("SportFlowIntegrationTest")
+                       .UseInternalServiceProvider(_efInternalSp));
         });
 
         builder.UseEnvironment("Testing");
+    }
+
+    protected override IHost CreateHost(IHostBuilder builder)
+    {
+        var host = base.CreateHost(builder);
+
+        using var scope = host.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<SportFlowDbContext>();
+        db.Database.EnsureCreated();
+        SeedTestData(db);
+
+        return host;
     }
 
     private static void SeedTestData(SportFlowDbContext db)
@@ -132,7 +147,6 @@ public class SportFlowWebAppFactory : WebApplicationFactory<Program>
         var tenantId = TenantId.From(Guid.Parse("00000000-0000-0000-0000-000000000001"));
         var hasher = new PasswordHasher<User>();
 
-        // Create user with placeholder hash, then update with real hash
         var user = User.Create("member@demo.com", "placeholder", SystemRoles.Member);
         var hash = hasher.HashPassword(user, "Password1!");
         user.UpdatePasswordHash(hash);

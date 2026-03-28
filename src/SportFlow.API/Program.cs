@@ -34,7 +34,7 @@ builder.Host.UseSerilog((ctx, lc) => lc
 
 // ── Database ─────────────────────────────────────────────────────────────────
 builder.Services.AddDbContext<SportFlowDbContext>(options =>
-    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection"),
+    options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection"),
         b => b.MigrationsAssembly("SportFlow.Infrastructure")));
 
 // ── JWT Authentication ───────────────────────────────────────────────────────
@@ -44,6 +44,7 @@ var secretKey = jwtSettings["SecretKey"]!;
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(options =>
     {
+        options.MapInboundClaims = false;
         options.TokenValidationParameters = new TokenValidationParameters
         {
             ValidateIssuer = true,
@@ -93,6 +94,7 @@ builder.Services.AddScoped<IRefreshTokenRepository, RefreshTokenRepository>();
 builder.Services.AddScoped<ITenantRepository, StubTenantRepository>();
 builder.Services.AddScoped<IJwtService, JwtService>();
 builder.Services.AddScoped<IUnitOfWork>(sp => sp.GetRequiredService<SportFlowDbContext>());
+builder.Services.AddScoped<IEmailService, StubEmailService>();
 
 // ── Command & Query Handlers ─────────────────────────────────────────────────
 builder.Services.AddScoped<ICommandHandler<LoginRequest, TokenResponse>, LoginCommandHandler>();

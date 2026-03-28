@@ -82,5 +82,5 @@
 - [x] 12.1 Tests unitarios para `LoginCommandHandler`: escenarios exitoso, credenciales inválidas, tenant inactivo, cuenta suspendida
 - [x] 12.2 Tests unitarios para `RefreshTokenCommandHandler`: escenarios exitoso, token vencido, token comprometido (rotation attack)
 - [x] 12.3 Tests unitarios para `JwtService`: verificar que los claims del token son correctos por rol
-- [ ] 12.4 Tests unitarios para `TenantResolutionMiddleware`: tenant válido, SuperAdmin sin tenant, request sin JWT
-- [ ] 12.5 Test de integración: flujo completo login → uso de API → refresh → logout usando `WebApplicationFactory`
+- [x] 12.4 Tests unitarios para `TenantResolutionMiddleware`: tenant válido, SuperAdmin sin tenant, request sin JWT
+- [x] 12.5 Test de integración: flujo completo login → uso de API → refresh → logout usando `WebApplicationFactory`

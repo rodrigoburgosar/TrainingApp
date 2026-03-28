@@ -8,8 +8,8 @@ public class SportFlowDbContextFactory : IDesignTimeDbContextFactory<SportFlowDb
     public SportFlowDbContext CreateDbContext(string[] args)
     {
         var optionsBuilder = new DbContextOptionsBuilder<SportFlowDbContext>();
-        optionsBuilder.UseSqlServer(
-            "Server=localhost;Database=SportFlow_Dev;Trusted_Connection=True;TrustServerCertificate=True;",
+        optionsBuilder.UseNpgsql(
+            "Host=localhost;Database=SportFlow_Dev;Username=postgres;Password=postgres",
             b => b.MigrationsAssembly("SportFlow.Infrastructure"));
 
         return new SportFlowDbContext(optionsBuilder.Options);
