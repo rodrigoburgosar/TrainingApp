@@ -1,0 +1,14 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/SportFlow.API/SportFlow.API.csproj" />
+    <Project Path="src/SportFlow.Application/SportFlow.Application.csproj" />
+    <Project Path="src/SportFlow.Domain/SportFlow.Domain.csproj" />
+    <Project Path="src/SportFlow.Infrastructure/SportFlow.Infrastructure.csproj" />
+    <Project Path="src/SportFlow.Shared/SportFlow.Shared.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/SportFlow.Application.Tests/SportFlow.Application.Tests.csproj" />
+    <Project Path="tests/SportFlow.Domain.Tests/SportFlow.Domain.Tests.csproj" />
+    <Project Path="tests/SportFlow.Integration.Tests/SportFlow.Integration.Tests.csproj" />
+  </Folder>
+</Solution>

@@ -4,7 +4,20 @@
       "Bash(dotnet --version)",
       "Skill(update-config)",
       "Bash(find /c/Rodrigo/trainingapp/openspec/ -name *.md -o -name *.yaml)",
-      "Bash(winget install:*)"
+      "Bash(winget install:*)",
+      "Bash(gh api:*)",
+      "Bash(openspec new:*)",
+      "Bash(openspec status:*)",
+      "Bash(openspec instructions:*)",
+      "Bash(dotnet new:*)",
+      "Bash(dotnet sln:*)",
+      "Bash(dotnet build:*)",
+      "Bash(dotnet ef:*)",
+      "Bash(dotnet add:*)",
+      "Bash(dotnet remove:*)",
+      "Bash(dotnet list:*)",
+      "Bash(find C:Usersrodri.nugetpackagesmicrosoft.openapi -name *.dll)",
+      "Bash(dotnet restore:*)"
     ]
   }
 }
