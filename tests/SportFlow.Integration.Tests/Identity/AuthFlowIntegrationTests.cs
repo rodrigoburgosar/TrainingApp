@@ -14,6 +14,7 @@ using SportFlow.Application.Identity.Commands;
 using SportFlow.Application.Identity.DTOs;
 using SportFlow.Domain.Identity;
 using SportFlow.Domain.Shared.ValueObjects;
+using SportFlow.Domain.Tenants;
 using SportFlow.Infrastructure.Persistence;
 
 namespace SportFlow.Integration.Tests.Identity;
@@ -142,19 +143,28 @@ public class SportFlowWebAppFactory : WebApplicationFactory<Program>
         return host;
     }
 
-    private static void SeedTestData(SportFlowDbContext db)
+    public static void SeedTestData(SportFlowDbContext db)
     {
         var tenantId = TenantId.From(Guid.Parse("00000000-0000-0000-0000-000000000001"));
         var hasher = new PasswordHasher<User>();
+
+        var tenant = Tenant.Create("Demo Gym", "demo", "basic");
+        // EF InMemory doesn't enforce constraints, so we can set a specific ID via the context
+        db.Tenants.Add(tenant);
 
         var user = User.Create("member@demo.com", "placeholder", SystemRoles.Member);
         var hash = hasher.HashPassword(user, "Password1!");
         user.UpdatePasswordHash(hash);
 
-        var role = UserTenantRole.Create(user.Id, tenantId, SystemRoles.Member);
+        var ownerUser = User.Create("owner@demo.com", "placeholder", SystemRoles.TenantOwner);
+        var ownerHash = hasher.HashPassword(ownerUser, "Password1!");
+        ownerUser.UpdatePasswordHash(ownerHash);
 
-        db.Users.Add(user);
-        db.UserTenantRoles.Add(role);
+        var memberRole = UserTenantRole.Create(user.Id, tenant.Id, SystemRoles.Member);
+        var ownerRole = UserTenantRole.Create(ownerUser.Id, tenant.Id, SystemRoles.TenantOwner);
+
+        db.Users.AddRange(user, ownerUser);
+        db.UserTenantRoles.AddRange(memberRole, ownerRole);
         db.SaveChanges();
     }
 }

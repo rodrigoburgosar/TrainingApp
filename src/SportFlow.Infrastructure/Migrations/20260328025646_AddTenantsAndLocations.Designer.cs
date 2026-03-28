@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using SportFlow.Infrastructure.Persistence;
@@ -11,9 +12,11 @@ using SportFlow.Infrastructure.Persistence;
 namespace SportFlow.Infrastructure.Migrations
 {
     [DbContext(typeof(SportFlowDbContext))]
-    partial class SportFlowDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260328025646_AddTenantsAndLocations")]
+    partial class AddTenantsAndLocations
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder

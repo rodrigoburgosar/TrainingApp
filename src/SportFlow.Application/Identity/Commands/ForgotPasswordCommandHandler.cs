@@ -2,6 +2,7 @@ using SportFlow.Application.Abstractions;
 using SportFlow.Application.Identity.DTOs;
 using SportFlow.Domain.Identity;
 using SportFlow.Domain.Shared.ValueObjects;
+using SportFlow.Domain.Tenants;
 using SportFlow.Shared.Results;
 
 namespace SportFlow.Application.Identity.Commands;
@@ -24,7 +25,7 @@ public class ForgotPasswordCommandHandler(
         if (tenant is null)
             return Result.Success();
 
-        var tenantId = TenantId.From(tenant.Id);
+        var tenantId = tenant.Id;
         var user = await userRepository.GetByEmailAndTenantAsync(command.Email.ToLowerInvariant(), tenantId, ct);
         if (user is null || !user.IsActive)
             return Result.Success();

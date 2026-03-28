@@ -6,6 +6,7 @@ using SportFlow.Application.Identity.Commands;
 using SportFlow.Application.Identity.DTOs;
 using SportFlow.Domain.Identity;
 using SportFlow.Domain.Shared.ValueObjects;
+using SportFlow.Domain.Tenants;
 
 namespace SportFlow.Application.Tests.Identity;
 
@@ -18,7 +19,7 @@ public class LoginCommandHandlerTests
     private readonly Mock<IUnitOfWork> _unitOfWork = new();
     private readonly LoginCommandHandler _handler;
 
-    private static readonly Guid TenantGuid = Guid.NewGuid();
+    private static readonly Guid TenantGuid = Guid.Parse("00000000-0000-0000-0000-000000000001");
     private static readonly Guid UserGuid = Guid.NewGuid();
     private const string ValidSlug = "demo";
 
@@ -40,18 +41,18 @@ public class LoginCommandHandlerTests
         return User.Create(email, hash, SystemRoles.Member);
     }
 
-    private static TenantInfo ActiveTenant() =>
-        new(TenantGuid, "Demo", ValidSlug, "active", "basic");
+    private static Tenant ActiveTenant() => Tenant.Create("Demo", ValidSlug, "basic");
 
     [Fact]
     public async Task Handle_ValidCredentials_ReturnsTokenResponse()
     {
         // Arrange
         var user = CreateActiveUser();
-        var tenantId = TenantId.From(TenantGuid);
+        var tenant = ActiveTenant();
+        var tenantId = tenant.Id;
         var role = UserTenantRole.Create(user.Id, tenantId, SystemRoles.Member);
 
-        _tenantRepo.Setup(r => r.GetBySlugAsync(ValidSlug, default)).ReturnsAsync(ActiveTenant());
+        _tenantRepo.Setup(r => r.GetBySlugAsync(ValidSlug, default)).ReturnsAsync(tenant);
         _userRepo.Setup(r => r.GetByEmailAndTenantAsync(It.IsAny<string>(), tenantId, default)).ReturnsAsync(user);
         _userRepo.Setup(r => r.GetUserTenantRoleAsync(user.Id, tenantId, default)).ReturnsAsync(role);
         _jwtService.Setup(j => j.GenerateAccessToken(user, tenantId, ValidSlug, SystemRoles.Member)).Returns("access-token");
@@ -74,7 +75,7 @@ public class LoginCommandHandlerTests
     [Fact]
     public async Task Handle_TenantNotFound_ReturnsFailure()
     {
-        _tenantRepo.Setup(r => r.GetBySlugAsync("unknown", default)).ReturnsAsync((TenantInfo?)null);
+        _tenantRepo.Setup(r => r.GetBySlugAsync("unknown", default)).ReturnsAsync((Tenant?)null);
 
         var result = await _handler.Handle(new LoginRequest("x@x.com", "pass", "unknown"));
 
@@ -85,8 +86,10 @@ public class LoginCommandHandlerTests
     [Fact]
     public async Task Handle_SuspendedTenant_ReturnsFailure()
     {
+        var suspendedTenant = Tenant.Create("Demo", ValidSlug, "basic");
+        suspendedTenant.Suspend();
         _tenantRepo.Setup(r => r.GetBySlugAsync(ValidSlug, default))
-            .ReturnsAsync(new TenantInfo(TenantGuid, "Demo", ValidSlug, "suspended", "basic"));
+            .ReturnsAsync(suspendedTenant);
 
         var result = await _handler.Handle(new LoginRequest("x@x.com", "pass", ValidSlug));
 

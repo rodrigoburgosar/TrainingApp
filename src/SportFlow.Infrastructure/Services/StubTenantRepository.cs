@@ -1,25 +1,35 @@
 using Microsoft.Extensions.Configuration;
-using SportFlow.Application.Identity.Commands;
+using SportFlow.Domain.Shared.ValueObjects;
+using SportFlow.Domain.Tenants;
 
 namespace SportFlow.Infrastructure.Services;
 
 /// <summary>
-/// Stub implementation for development. Replace with proper repository when Tenants domain is implemented.
+/// Configuration-backed stub for development. Used when running without a database.
 /// Reads tenants from appsettings.json under "Tenants" section.
 /// </summary>
 public class StubTenantRepository(IConfiguration configuration) : ITenantRepository
 {
-    public Task<TenantInfo?> GetBySlugAsync(string slug, CancellationToken ct = default)
+    public Task<Tenant?> GetByIdAsync(TenantId id, CancellationToken ct = default)
+    {
+        var tenants = configuration.GetSection("Tenants").Get<List<TenantConfig>>();
+        var match = tenants?.FirstOrDefault(t => t.Id == id.Value);
+        return Task.FromResult(match is null ? null : ToTenant(match));
+    }
+
+    public Task<Tenant?> GetBySlugAsync(string slug, CancellationToken ct = default)
     {
         var tenants = configuration.GetSection("Tenants").Get<List<TenantConfig>>();
         var match = tenants?.FirstOrDefault(t =>
             string.Equals(t.Slug, slug, StringComparison.OrdinalIgnoreCase));
+        return Task.FromResult(match is null ? null : ToTenant(match));
+    }
 
-        if (match is null)
-            return Task.FromResult<TenantInfo?>(null);
-
-        return Task.FromResult<TenantInfo?>(
-            new TenantInfo(match.Id, match.Name, match.Slug, match.Status, match.Plan));
+    private static Tenant? ToTenant(TenantConfig config)
+    {
+        var tenant = Tenant.Create(config.Name, config.Slug, config.Plan);
+        if (config.Status == TenantStatus.Suspended) tenant.Suspend();
+        return tenant;
     }
 
     private sealed class TenantConfig

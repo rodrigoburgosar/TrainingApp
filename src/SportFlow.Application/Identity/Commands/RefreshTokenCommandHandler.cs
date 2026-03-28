@@ -3,6 +3,7 @@ using SportFlow.Application.Identity.Commands;
 using SportFlow.Application.Identity.DTOs;
 using SportFlow.Domain.Identity;
 using SportFlow.Domain.Shared.ValueObjects;
+using SportFlow.Domain.Tenants;
 using SportFlow.Shared.Results;
 
 namespace SportFlow.Application.Identity.Commands;
@@ -36,7 +37,6 @@ public class RefreshTokenCommandHandler(
 
         // Obtener rol del tenant
         string role = SystemRoles.Member;
-        TenantInfo? tenant = null;
         TenantId? tenantId = existing.TenantId;
 
         if (tenantId.HasValue)

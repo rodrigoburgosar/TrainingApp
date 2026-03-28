@@ -3,6 +3,7 @@ using SportFlow.Application.Abstractions;
 using SportFlow.Application.Identity.DTOs;
 using SportFlow.Domain.Identity;
 using SportFlow.Domain.Shared.ValueObjects;
+using SportFlow.Domain.Tenants;
 using SportFlow.Shared.Results;
 
 namespace SportFlow.Application.Identity.Commands;
@@ -15,13 +16,6 @@ public interface IRefreshTokenRepository
     Task RevokeAllForUserAsync(UserId userId, CancellationToken ct = default);
     Task<IReadOnlyList<RefreshToken>> GetActiveByUserAsync(UserId userId, CancellationToken ct = default);
 }
-
-public interface ITenantRepository
-{
-    Task<TenantInfo?> GetBySlugAsync(string slug, CancellationToken ct = default);
-}
-
-public record TenantInfo(Guid Id, string Name, string Slug, string Status, string Plan);
 
 public class LoginCommandHandler(
     IUserRepository userRepository,
@@ -38,10 +32,10 @@ public class LoginCommandHandler(
         if (tenant is null)
             return Result.Failure<TokenResponse>("TENANT_NOT_FOUND", $"Tenant '{command.TenantSlug}' not found.");
 
-        if (tenant.Status is "suspended" or "cancelled")
+        if (tenant.Status is TenantStatus.Suspended or TenantStatus.Cancelled)
             return Result.Failure<TokenResponse>("TENANT_INACTIVE", "The tenant is not active.");
 
-        var tenantId = TenantId.From(tenant.Id);
+        var tenantId = tenant.Id;
         var user = await userRepository.GetByEmailAndTenantAsync(command.Identifier.ToLowerInvariant(), tenantId, ct);
         if (user is null)
             return Result.Failure<TokenResponse>("INVALID_CREDENTIALS", "Invalid credentials.");
@@ -77,7 +71,7 @@ public class LoginCommandHandler(
             user.Email,
             tenantRole.Role,
             scopes,
-            new TenantRef(tenant.Id, tenant.Name, tenant.Slug, tenant.Plan));
+            new TenantRef(tenant.Id.Value, tenant.Name, tenant.Slug, tenant.Plan));
 
         return Result.Success(new TokenResponse(accessToken, rawRefreshToken, 900, "Bearer", me));
     }

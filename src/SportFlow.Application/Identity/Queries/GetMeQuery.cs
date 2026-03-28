@@ -2,6 +2,7 @@ using SportFlow.Application.Abstractions;
 using SportFlow.Application.Identity.Commands;
 using SportFlow.Application.Identity.DTOs;
 using SportFlow.Domain.Identity;
+using SportFlow.Domain.Tenants;
 using SportFlow.Shared.Results;
 
 namespace SportFlow.Application.Identity.Queries;
@@ -24,7 +25,7 @@ public class GetMeQueryHandler(
         {
             var tenant = await tenantRepository.GetBySlugAsync(tenantContext.TenantSlug ?? "", ct);
             if (tenant is not null)
-                tenantRef = new TenantRef(tenant.Id, tenant.Name, tenant.Slug, tenant.Plan);
+                tenantRef = new TenantRef(tenant.Id.Value, tenant.Name, tenant.Slug, tenant.Plan);
         }
 
         var scopes = SystemRoles.GetScopesForRole(tenantContext.Role);

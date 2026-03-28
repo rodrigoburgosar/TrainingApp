@@ -12,7 +12,11 @@ using SportFlow.Application.Identity.Commands;
 using SportFlow.Application.Identity.DTOs;
 using SportFlow.Application.Identity.Queries;
 using SportFlow.Application.Identity.Validators;
+using SportFlow.Application.Tenants.Commands;
+using SportFlow.Application.Tenants.DTOs;
+using SportFlow.Application.Tenants.Queries;
 using SportFlow.Domain.Identity;
+using SportFlow.Domain.Tenants;
 using SportFlow.Infrastructure.Persistence;
 using SportFlow.Infrastructure.Persistence.Repositories;
 using SportFlow.Infrastructure.Services;
@@ -83,6 +87,12 @@ builder.Services.AddAuthorization(options =>
             SystemRoles.TenantOwner,
             SystemRoles.TenantManager,
             SystemRoles.Coach));
+
+    options.AddPolicy("RequireTenantManagerOrAbove", policy =>
+        policy.RequireClaim("role",
+            SystemRoles.SuperAdmin,
+            SystemRoles.TenantOwner,
+            SystemRoles.TenantManager));
 });
 
 // ── Repositories & Services ─────────────────────────────────────────────────
@@ -91,7 +101,8 @@ builder.Services.AddScoped<ITenantContext>(sp => sp.GetRequiredService<TenantCon
 
 builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<IRefreshTokenRepository, RefreshTokenRepository>();
-builder.Services.AddScoped<ITenantRepository, StubTenantRepository>();
+builder.Services.AddScoped<ITenantRepository, TenantRepository>();
+builder.Services.AddScoped<ILocationRepository, LocationRepository>();
 builder.Services.AddScoped<IJwtService, JwtService>();
 builder.Services.AddScoped<IUnitOfWork>(sp => sp.GetRequiredService<SportFlowDbContext>());
 builder.Services.AddScoped<IEmailService, StubEmailService>();
@@ -106,6 +117,14 @@ builder.Services.AddScoped<ICommandHandler<ResetPasswordRequest>, ResetPasswordC
 builder.Services.AddScoped<ICommandHandler<RevokeSessionCommand>, RevokeSessionCommandHandler>();
 builder.Services.AddScoped<IQueryHandler<GetMeQuery, MeResponse>, GetMeQueryHandler>();
 builder.Services.AddScoped<IQueryHandler<GetSessionsQuery, IReadOnlyList<SessionResponse>>, GetSessionsQueryHandler>();
+
+// Tenant & Location handlers
+builder.Services.AddScoped<IQueryHandler<GetTenantMeQuery, TenantMeResponse>, GetTenantMeQueryHandler>();
+builder.Services.AddScoped<IQueryHandler<GetLocationsQuery, IReadOnlyList<LocationResponse>>, GetLocationsQueryHandler>();
+builder.Services.AddScoped<IQueryHandler<GetLocationByIdQuery, LocationResponse>, GetLocationByIdQueryHandler>();
+builder.Services.AddScoped<ICommandHandler<CreateLocationCommand, LocationResponse>, CreateLocationCommandHandler>();
+builder.Services.AddScoped<ICommandHandler<UpdateLocationCommand, LocationResponse>, UpdateLocationCommandHandler>();
+builder.Services.AddScoped<ICommandHandler<DeactivateLocationCommand>, DeactivateLocationCommandHandler>();
 
 // ── FluentValidation ─────────────────────────────────────────────────────────
 builder.Services.AddFluentValidationAutoValidation();
